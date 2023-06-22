@@ -1,9 +1,26 @@
 from flask import Flask, redirect, url_for, render_template, request, session
 from datetime import timedelta
+from flask_sqlalchemy import SQLAlchemy
+from os import path
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "sangdangdns"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///user.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] =False
 app.permanent_session_lifetime = timedelta(minutes=1)
+
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    user_id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(100))
+
+    def __init__(self,name,email):
+        self.name = name
+        self.email = email
+
+
 @app.route("/login", methods=["POST","GET"])
 def hello_world():
     if request.method == "POST":
@@ -42,5 +59,9 @@ def logout():
 def blog(blog_id):
     return f"Blog {blog_id} !!!"
 
-if __name__ =="__main__":
+if __name__ == "__main__":
+    if not path.exists("user.db"):
+        with app.app_context():
+            db.create_all()
+            print("Created DB")
     app.run(debug=True)
